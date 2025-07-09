@@ -3,9 +3,10 @@ package dev.ftb.mods.ftbessentials;
 import com.mojang.brigadier.CommandDispatcher;
 import dev.architectury.event.EventResult;
 import dev.architectury.event.events.common.*;
-import dev.ftb.mods.ftbessentials.api.records.TPARequest;
-import dev.ftb.mods.ftbessentials.commands.FTBCommands;
-import dev.ftb.mods.ftbessentials.commands.impl.teleporting.TPACommand;
+import dev.architectury.platform.Platform;
+import dev.ftb.mods.ftbessentials.command.FTBEssentialsCommands;
+import dev.ftb.mods.ftbessentials.command.TPACommands;
+import dev.ftb.mods.ftbessentials.config.FTBEConfig;
 import dev.ftb.mods.ftbessentials.kit.KitManager;
 import dev.ftb.mods.ftbessentials.util.FTBEPlayerData;
 import dev.ftb.mods.ftbessentials.util.FTBEWorldData;
@@ -28,12 +29,27 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 
+/**
+ * @author LatvianModder
+ */
 public class FTBEEventHandler {
+	public static final LevelResource CONFIG_FILE = new LevelResource("serverconfig/ftbessentials.snbt");
+	private static final String[] DEFAULT_CONFIG = {
+			"Default config file that will be copied to world's serverconfig/ftbessentials.snbt location",
+			"Copy values you wish to override in here",
+			"Example:",
+			"",
+			"{",
+			"	misc: {",
+			"		enderchest: {",
+			"			enabled: false",
+			"		}",
+			"	}",
+			"}",
+	};
 
 	public static void init() {
 		LifecycleEvent.SERVER_BEFORE_START.register(FTBEEventHandler::serverAboutToStart);
@@ -56,30 +72,23 @@ public class FTBEEventHandler {
 	}
 
 	private static void serverAboutToStart(MinecraftServer minecraftServer) {
+		Path configFilePath = minecraftServer.getWorldPath(CONFIG_FILE);
+		Path defaultConfigFilePath = Platform.getConfigFolder().resolve("../defaultconfigs/ftbessentials-server.snbt");
+
+		FTBEConfig.CONFIG.load(configFilePath, defaultConfigFilePath, () -> DEFAULT_CONFIG);
+
 		FTBEPlayerData.clear();
 		FTBEWorldData.instance = new FTBEWorldData(minecraftServer);
 		FTBEWorldData.instance.load();
-
-		Path oldConfigPath = minecraftServer.getWorldPath(LevelResource.ROOT)
-				.resolve("serverconfig")
-				.resolve(FTBEssentials.CONFIG_FILE);
-		if (!Files.exists(oldConfigPath)) {
-			// create a placeholder file for where config used to be
-			try {
-				Files.writeString(oldConfigPath, "# File has moved!\n# FTB Essentials configuration is now in <instance-folder>/config/ftbessentials.snbt\n");
-			} catch (IOException e) {
-				FTBEssentials.LOGGER.error("can't write {}: {}", oldConfigPath, e.getMessage());
-			}
-		}
 	}
 
 	private static void serverStopped(MinecraftServer minecraftServer) {
 		FTBEWorldData.instance = null;
-		TPACommand.clearRequests();
+		TPACommands.REQUESTS.clear();
 	}
 
 	private static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext commandBuildContext, Commands.CommandSelection commandSelection) {
-		FTBCommands.register(dispatcher);
+		FTBEssentialsCommands.registerCommands(dispatcher);
 	}
 
 	private static void levelSave(ServerLevel serverLevel) {
@@ -108,7 +117,7 @@ public class FTBEEventHandler {
 	private static void playerLoggedOut(ServerPlayer serverPlayer) {
 		FTBEPlayerData.getOrCreate(serverPlayer).ifPresent(data -> {
 			data.setLastSeenPos(new TeleportPos(serverPlayer));
-			data.saveIfChanged();
+			data.markDirty();
 		});
 	}
 
@@ -133,10 +142,10 @@ public class FTBEEventHandler {
 	private static void serverTickPost(MinecraftServer server) {
 		long now = System.currentTimeMillis();
 
-		Iterator<TPARequest> iterator = TPACommand.requests().values().iterator();
+		Iterator<TPACommands.TPARequest> iterator = TPACommands.REQUESTS.values().iterator();
 
 		while (iterator.hasNext()) {
-			TPARequest r = iterator.next();
+			TPACommands.TPARequest r = iterator.next();
 
 			if (now > r.created() + 60000L) {
 				ServerPlayer source = server.getPlayerList().getPlayer(r.source().getUuid());

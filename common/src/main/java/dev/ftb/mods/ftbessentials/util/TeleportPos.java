@@ -11,9 +11,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
+/**
+ * @author LatvianModder
+ */
 public class TeleportPos {
 	private final ResourceKey<Level> dimension;
 	private final BlockPos pos;
@@ -23,7 +25,7 @@ public class TeleportPos {
 	public TeleportPos(ResourceKey<Level> d, BlockPos p) {
 		this(d, p, null, null);
 	}
-
+	
 	public TeleportPos(ResourceKey<Level> d, BlockPos p, Float yRot, Float xRot) {
 		dimension = d;
 		pos = p;
@@ -41,20 +43,11 @@ public class TeleportPos {
 	}
 
 	public TeleportPos(CompoundTag tag) {
-		dimension = ResourceKey.create(Registries.DIMENSION, ResourceLocation.tryParse(tag.getString("dim")));
+		dimension = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(tag.getString("dim")));
 		pos = new BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z"));
 		this.yRot = (tag.getTagType("yRot") == CompoundTag.TAG_FLOAT) ? tag.getFloat("yRot") : null;
 		this.xRot = (tag.getTagType("xRot") == CompoundTag.TAG_FLOAT) ? tag.getFloat("xRot") : null;
 		time = tag.getLong("time");
-	}
-
-	public TeleportResult checkDimensionBlacklist(Player player) {
-		if (!DimensionFilter.isDimensionOKTo(this.dimension)) {
-			return TeleportResult.DIMENSION_NOT_ALLOWED_TO;
-		} else if(!DimensionFilter.isDimensionOKFrom(player.level().dimension())) {
-			return TeleportResult.DIMENSION_NOT_ALLOWED_FROM;
-		}
-		return TeleportResult.SUCCESS;
 	}
 
 	public TeleportResult teleport(ServerPlayer player) {
@@ -105,13 +98,12 @@ public class TeleportPos {
 		}
 	}
 
-	public BlockPos getPos() {
-		return pos;
+	public ResourceKey<Level> getDimension() {
+		return dimension;
 	}
 
-	public String posAsString() {
-		// Normal shortString would be 1, 2, 3 so we remove the commas
-		return pos.toShortString().replaceAll(",", "");
+	public BlockPos getPos() {
+		return pos;
 	}
 
 	@FunctionalInterface
@@ -138,10 +130,6 @@ public class TeleportPos {
 		TeleportResult DIMENSION_NOT_FOUND = failed(Component.literal("Dimension not found!"));
 
 		TeleportResult UNKNOWN_DESTINATION = failed(Component.literal("Unknown destination!"));
-		
-		TeleportResult DIMENSION_NOT_ALLOWED_FROM = failed(Component.literal("Teleportation from your dimension is not allowed!"));
-		
-		TeleportResult DIMENSION_NOT_ALLOWED_TO = failed(Component.literal("Teleportation to this dimension is not allowed!"));
 
 		int runCommand(ServerPlayer player);
 

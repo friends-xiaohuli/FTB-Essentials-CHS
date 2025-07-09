@@ -11,61 +11,31 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public class DimensionFilter {
-    private static WildcardedRLMatcher rtpDimensionMatcherB = null;
-    private static WildcardedRLMatcher rtpDimensionMatcherW = null;
+    private static WildcardedRLMatcher dimensionMatcherB = null;
+    private static WildcardedRLMatcher dimensionMatcherW = null;
 
-    private static WildcardedRLMatcher allDimensionMatcherBTo = null;
-    private static WildcardedRLMatcher allDimensionMatcherBFrom = null;
-
-    public static boolean isRtpDimensionOK(ResourceKey<Level> levelKey) {
+    public static boolean isDimensionOK(ResourceKey<Level> levelKey) {
         ResourceLocation name = levelKey.location();
-        return !getRtpDimensionBlacklist().test(name) && (getRtpDimensionWhitelist().isEmpty() || getRtpDimensionWhitelist().test(name));
-    }
-    
-    public static boolean isDimensionOKFrom(ResourceKey<Level> levelKey) {
-        ResourceLocation name = levelKey.location();
-        return !getAllCommandDimensionBlacklistFrom().test(name);
+        return !getDimensionBlacklist().test(name) && (getDimensionWhitelist().isEmpty() || getDimensionWhitelist().test(name));
     }
 
-    public static boolean isDimensionOKTo(ResourceKey<Level> levelKey) {
-        ResourceLocation name = levelKey.location();
-        return !getAllCommandDimensionBlacklistTo().test(name);
+    private static WildcardedRLMatcher getDimensionWhitelist() {
+        if (dimensionMatcherW == null) {
+            dimensionMatcherW = new WildcardedRLMatcher(FTBEConfig.RTP_DIMENSION_WHITELIST.get());
+        }
+        return dimensionMatcherW;
     }
 
-    private static WildcardedRLMatcher getRtpDimensionWhitelist() {
-        if (rtpDimensionMatcherW == null) {
-            rtpDimensionMatcherW = new WildcardedRLMatcher(FTBEConfig.RTP_DIMENSION_WHITELIST.get());
+    private static WildcardedRLMatcher getDimensionBlacklist() {
+        if (dimensionMatcherB == null) {
+            dimensionMatcherB = new WildcardedRLMatcher(FTBEConfig.RTP_DIMENSION_BLACKLIST.get());
         }
-        return rtpDimensionMatcherW;
+        return dimensionMatcherB;
     }
 
-    private static WildcardedRLMatcher getRtpDimensionBlacklist() {
-        if (rtpDimensionMatcherB == null) {
-            rtpDimensionMatcherB = new WildcardedRLMatcher(FTBEConfig.RTP_DIMENSION_BLACKLIST.get());
-        }
-        return rtpDimensionMatcherB;
-    }
-    
-    private static WildcardedRLMatcher getAllCommandDimensionBlacklistFrom() {
-        if (allDimensionMatcherBFrom == null) {
-            allDimensionMatcherBFrom = new WildcardedRLMatcher(FTBEConfig.TELEPORTATION_BLACKLIST_FROM.get());
-        }
-        return allDimensionMatcherBFrom;
-    }
-    
-    private static WildcardedRLMatcher getAllCommandDimensionBlacklistTo() {
-        if (allDimensionMatcherBTo == null) {
-            allDimensionMatcherBTo = new WildcardedRLMatcher(FTBEConfig.TELEPORTATION_BLACKLIST_TO.get());
-        }
-        return allDimensionMatcherBTo;
-    }
-    
     public static void clearMatcherCaches() {
-        rtpDimensionMatcherB = null;
-        rtpDimensionMatcherW = null;
-        
-        allDimensionMatcherBFrom = null;
-        allDimensionMatcherBTo = null;
+        dimensionMatcherB = null;
+        dimensionMatcherW = null;
     }
 
     private static class WildcardedRLMatcher implements Predicate<ResourceLocation> {
@@ -73,13 +43,11 @@ public class DimensionFilter {
         private final Set<ResourceLocation> reslocs = new ObjectOpenHashSet<>();
 
         public WildcardedRLMatcher(Collection<String> toMatch) {
-            ResourceLocation location;
-
             for (String s : toMatch) {
                 if (s.endsWith(":*")) {
                     namespaces.add(s.split(":")[0]);
-                } else if ((location = ResourceLocation.tryParse(s)) != null) {
-                    reslocs.add(location);
+                } else if (ResourceLocation.isValidResourceLocation(s)) {
+                    reslocs.add(new ResourceLocation(s));
                 }
             }
         }

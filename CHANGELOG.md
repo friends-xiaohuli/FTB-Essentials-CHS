@@ -4,93 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2101.1.4]
+## [2001.2.3]
 
 ### Fixed
-* Fix bug from last release causing teleport positions to be added to the history twice, breaking the `/back` command
-
-## [2101.1.3]
+* Fixed `/rtp` command always landing at a Z=112 coordinate in the Nether (and potentially other dimensions with nether-like heightmaps)
+* The `/spawn` command now sends players to their own spawnpoint (e.g. as set by the vanilla `/spawnpoint` command, or by other mods) instead of assuming the default overworld spawn position
 
 ### Added
-* Now fires an `EntityTeleportEvent.TeleportCommand` event on NeoForge when any teleportation is done
-  * Note: There isn't a Fabric API equivalent for this event
-* The `/rtp` command can now optionally take minimum and maximum distance arguments - thanks @CanadianBaconBoi
-  * Note that to use these arguments, players must either be admins (permission >= 2) or have the `ftbessentials.rtp.custom_min_max` and/or `ftbessentials.rtp.custom_max` ranks nodes
-* Added dimension blacklist for teleportation commands - thanks @CanadianBaconBoi
-  * This is in addition to the existing RTP blacklist config
-  * See new `blacklists` config section within the `teleportation` section of the config
-  * `from` can be used to prohibit teleportation by players who are _in_ the listed dimension IDs
-  * `to` can be used to prohibit teleportation by players _to_ any of the listed dimension IDs
-  * Dimensions can be wildcarded, e.g. `somemod:*` matches all dimensions registered by mod `somemod`
-
-### Fixed
-* Fixed problem on SMP where player data (e.g. home location) wasn't always written for the player
-  * In particular if player disconnected before the server ran a scheduled level save
-
-## [2101.1.2]
-
-### Fixed
-* Fixed a command being usable by non-admin players
-
-## [2101.1.1]
-
-### Added
-* Added fr_fr translation (thanks @Nogapra)
-* Added tr_tr translation (thanks @RuyaSavascisi)
-
-### Fixed
-* Fixed command cooldowns not being sufficiently dynamically calculated
-  * E.g. if a player runs a teleport command, and then adds a FTB Ranks node to reduce their cooldown
-  * Cooldowns are now recalculated on each command attempt rather than precalculated on a successful run
-* Fixed the `/rtp` command sometimes sending players to bad destinations
-  * Was particularly an issue in the Nether (and likely other roofed dimensions)
-
-## [2101.1.0]
-
-### Changed
-* Minecraft 1.21.1 is now required; this no longer supports Minecraft 1.21
-
-### Added
-* Sidebar buttons for this and other FTB mods can now be enabled/disabled/rearranged (new functionality in FTB Library 2101.1.0)
-
-## [2100.1.1]
-
-### Fixed
-* Fixed `/enderchest` command opening the Ender Chest GUI on target player's screen instead of executing player
-
-## [2100.1.0]
-
-### Changed
-* Ported to Minecraft 1.20.6. Support for Fabric and NeoForge.
-  * Forge support may be re-added if/when Architectury adds support for Forge
-
-## [2006.1.0]
-
-### Changed
-* Ported to Minecraft 1.20.6. Support for Fabric and NeoForge.
-  * Forge support may be re-added if/when Architectury adds support for Forge
-
-## [2004.1.2]
-
-### Changed
-* `/tpl` is now `/teleport_last` (Technically this happened last version)
-* `/anvil`, `/crafting`, `/smithing`, `/stonecutter` have been moved under the `/open` namespace
-  * E.g. `/open anvil` will open an Anvil GUI
-* `/listhomes` now allows you to click to teleport to a home (When OP) and has had the output improved.
-
-### Fixed
-* `/leaderboard` will now correctly show offline players
-* `/leaderboard` will no longer show `#010` :joy:
-
-## [2004.1.1]
-
-### Changed
-* Ported to MC 1.20.4. Support for Forge, NeoForge & Fabric.
-* Essentials commands can now optionally be registered under the top-level `/ftbessentials` command
-  * By default, commands are still registered as their own top-level command, as before
-  * See the `register_to_namespace` and `register_alias_as_well_as_namespace` boolean options in the `ftbessentials.snbt` config file
-* Server configuration file has moved from `<world>/serverconfig/ftbessentials.snbt` to `<instance>/config/ftbessentials.snbt`
-  * This was necessary due to command registration (which happens before server start) needing to know the config
+* Added `TeleportPos#getDimension` and `TeleportPos#getPos` (mainly for benefit of KubeJS scripting)
 
 ## [2001.2.2]
 

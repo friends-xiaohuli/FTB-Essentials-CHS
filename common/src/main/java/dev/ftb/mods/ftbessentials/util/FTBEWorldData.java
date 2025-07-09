@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftbessentials.util;
 
+import com.mojang.authlib.GameProfile;
 import dev.ftb.mods.ftbessentials.FTBEssentials;
 import dev.ftb.mods.ftbessentials.kit.KitManager;
 import dev.ftb.mods.ftblibrary.snbt.SNBT;
@@ -12,6 +13,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+/**
+ * @author LatvianModder
+ */
 public class FTBEWorldData {
 	private static final LevelResource FTBESSENTIALS_DIRECTORY = new LevelResource("ftbessentials");
 	private static final String DATA_FILE = "data.snbt";
@@ -22,7 +26,7 @@ public class FTBEWorldData {
 	private boolean needSave;
 
 	private final SavedTeleportManager.WarpManager warpManager;
-	private final Map<UUID, Long> muteTimeouts;
+	private final Map<UUID,Long> muteTimeouts;
 
 	public FTBEWorldData(MinecraftServer s) {
 		server = s;
@@ -69,7 +73,7 @@ public class FTBEWorldData {
 				loadNBT(tag);
 			}
 		} catch (Exception ex) {
-			FTBEssentials.LOGGER.error("Failed to load world data: {}", ex);
+			FTBEssentials.LOGGER.error("Failed to load world data: " + ex);
 			ex.printStackTrace();
 		}
 	}
@@ -83,7 +87,7 @@ public class FTBEWorldData {
 		muteTimeouts.forEach((id, until) -> mutesTag.putLong(id.toString(), until));
 		tag.put("mute_timeouts", mutesTag);
 
-		tag.put("kits", KitManager.getInstance().save(server.registryAccess()));
+		tag.put("kits", KitManager.getInstance().save());
 
 		return tag;
 	}
@@ -97,7 +101,7 @@ public class FTBEWorldData {
 			muteTimeouts.put(UUID.fromString(key), mutesTag.getLong(key));
 		}
 
-		KitManager.getInstance().load(tag.getCompound("kits"), server.registryAccess());
+		KitManager.getInstance().load(tag.getCompound("kits"));
 	}
 
 	public void tickMuteTimeouts(MinecraftServer server) {
@@ -113,13 +117,13 @@ public class FTBEWorldData {
 			if (player != null) {
 				player.displayClientMessage(player.getDisplayName().copy().append(" is no longer muted"), false);
 			}
-
-			FTBEPlayerData.getOrCreate(server, id).ifPresent(data -> {
+			FTBEPlayerData.getOrCreate(new GameProfile(id, "")).ifPresent(data -> {
 				data.setMuted(false);
-				data.saveIfChanged();
+				if (player == null) {
+					data.saveIfChanged();  // ensure data for offline player is correct before they log in again
+				}
 				FTBEssentials.LOGGER.info("auto-unmuted {} - timeout expired", id);
 			});
-
 			muteTimeouts.remove(id);
 			markDirty();
 		});

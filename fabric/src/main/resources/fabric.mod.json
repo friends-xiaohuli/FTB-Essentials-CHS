@@ -22,7 +22,7 @@
     "ftbessentials-common.mixins.json"
   ],
   "depends": {
-    "fabric": "${fabricapiversionrange}",
+    "fabric": "*",
     "minecraft": ">=${mcversion}",
     "architectury": ">=${archversion}",
     "ftblibrary": ">=${ftblibraryversion}"

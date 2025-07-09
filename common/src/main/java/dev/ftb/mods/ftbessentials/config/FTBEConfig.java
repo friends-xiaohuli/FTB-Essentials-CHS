@@ -8,17 +8,11 @@ import dev.ftb.mods.ftblibrary.snbt.config.StringListValue;
 
 import java.util.List;
 
+/**
+ * @author LatvianModder
+ */
 public interface FTBEConfig {
 	SNBTConfig CONFIG = SNBTConfig.create(FTBEssentials.MOD_ID).comment("FTB Essentials config file", "If you're a modpack maker, edit defaultconfigs/ftbessentials-server.snbt instead");
-
-	BooleanValue REGISTER_TO_NAMESPACE = CONFIG.addBoolean("register_to_namespace", false)
-			.comment("If true, the mod will register its commands to the 'ftbessentials' namespace,",
-					"otherwise it will register to the root namespace");
-
-	BooleanValue REGISTER_ALIAS_AS_WELL_AS_NAMESPACE = CONFIG.addBoolean("register_alias_as_well_as_namespace", false)
-			.comment("If true, the mod will register its commands to the 'ftbessentials' namespace as well as the root namespace",
-					"otherwise it will only register to the root namespace",
-					"This setting has no effect if 'register_to_namespace' is false");
 
 	SNBTConfig TELEPORTATION = CONFIG.addGroup("teleportation").comment("Teleportation-related settings");
 	// back
@@ -63,18 +57,6 @@ public interface FTBEConfig {
 	StringListValue RTP_DIMENSION_BLACKLIST = RTP.config.addStringList("dimension_blacklist", List.of("minecraft:the_end"))
 			.comment("Blacklisted dimension ID's for /rtp (player *must not* be in any of these dimensions)",
 					"Wildcarded dimensions (e.g. 'somemod:*') are supported");
-
-	PermissionBasedBooleanValue RTP_MAX_DISTANCE_CUSTOM = new PermissionBasedBooleanValue(
-			RTP.config.addBoolean("allow_custom_max_distance", false),
-			"ftbessentials.rtp.custom_max",
-			"Allow player to specify (only) custom max distance in rtp command"
-	);
-	
-	PermissionBasedBooleanValue RTP_MIN_DISTANCE_CUSTOM = new PermissionBasedBooleanValue(
-			RTP.config.addBoolean("allow_custom_min_max_distance", false),
-			"ftbessentials.rtp.custom_min_max",
-			"Allow player to specify custom min and max distance in rtp command"
-	);
 	// tpl
 	ToggleableConfig TPL = new ToggleableConfig(TELEPORTATION, "tpl")
 			.comment("Allows admins to teleport to the location a user was last seen at");
@@ -83,14 +65,6 @@ public interface FTBEConfig {
 			.comment("Allows admins to teleport to dimension");
 	ToggleableConfig JUMP = new ToggleableConfig(TELEPORTATION, "jump")
 			.comment("Allows admins to jump (teleport) to the focused block");
-	
-	SNBTConfig TELEPORTATION_BLACKLISTS = TELEPORTATION.addGroup("blacklists")
-			.comment("Blacklists for all teleport commands",
-			"Wildcarded dimensions (e.g. 'somemod:*') are supported");
-	StringListValue TELEPORTATION_BLACKLIST_FROM = TELEPORTATION_BLACKLISTS.addStringList("from", List.of())
-			.comment("Dimensions players aren't permitted to run teleport commands in.");
-	StringListValue TELEPORTATION_BLACKLIST_TO = TELEPORTATION_BLACKLISTS.addStringList("to", List.of())
-			.comment("Dimensions players aren't permitted to teleport into.");
 
 	SNBTConfig ADMIN = CONFIG.addGroup("admin").comment("Admin commands for cheating and moderation");
 	ToggleableConfig HEAL = new ToggleableConfig(ADMIN, "heal")

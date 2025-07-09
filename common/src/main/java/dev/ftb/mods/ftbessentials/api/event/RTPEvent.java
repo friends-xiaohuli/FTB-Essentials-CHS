@@ -4,6 +4,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
+/**
+ * @author LatvianModder
+ */
 public class RTPEvent {
 	private final ServerLevel level;
 	private final ServerPlayer serverPlayer;

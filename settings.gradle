@@ -9,7 +9,6 @@ pluginManagement {
 
 include("common")
 include("fabric")
-//include("forge")
-include("neoforge")
+include("forge")
 
-rootProject.name = "FTB-Essentials-1.21"
+rootProject.name = "FTB-Essentials-1.20.1"

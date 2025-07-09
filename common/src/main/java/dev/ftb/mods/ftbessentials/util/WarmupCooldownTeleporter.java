@@ -1,9 +1,8 @@
 package dev.ftb.mods.ftbessentials.util;
 
 import dev.architectury.event.CompoundEventResult;
-import dev.architectury.injectables.annotations.ExpectPlatform;
-import dev.ftb.mods.ftbessentials.api.event.TeleportEvent;
 import dev.ftb.mods.ftbessentials.config.FTBEConfig;
+import dev.ftb.mods.ftbessentials.api.event.TeleportEvent;
 import dev.ftb.mods.ftbessentials.util.TeleportPos.TeleportResult;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -15,13 +14,16 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
+/**
+ * @author LatvianModder
+ */
 public class WarmupCooldownTeleporter {
 	private final FTBEPlayerData playerData;
 	private final ToIntFunction<ServerPlayer> cooldownConfig;
 	private final ToIntFunction<ServerPlayer> warmupConfig;
 	private final boolean popHistoryOnTeleport;
 
-	private long lastRun;  // time of the last run of the command (which wasn't on cooldown)
+	private long cooldown;
 
 	private static final Map<UUID, Warmup> WARMUPS = new HashMap<>();
 	private static final Map<UUID, Warmup> pendingAdditions = new HashMap<>();
@@ -36,45 +38,28 @@ public class WarmupCooldownTeleporter {
 		this.cooldownConfig = cooldownConfig;
 		this.warmupConfig = warmupConfig;
 		this.popHistoryOnTeleport = popHistoryOnTeleport;
-		this.lastRun = 0L;
+		this.cooldown = 0L;
 	}
 
-	public TeleportResult checkCooldown(ServerPlayer player) {
+	public TeleportResult checkCooldown() {
 		long now = System.currentTimeMillis();
-		long nextRun = lastRun + Math.max(0L, cooldownConfig.applyAsInt(player) * 1000L);
 
-		if (now < nextRun) {
-			return (TeleportPos.CooldownTeleportResult) () -> nextRun - now;
+		if (now < cooldown) {
+			return (TeleportPos.CooldownTeleportResult) () -> cooldown - now;
 		}
 
 		return TeleportResult.SUCCESS;
 	}
 
-	@ExpectPlatform
-	private static boolean firePlatformTeleportEvent(ServerPlayer player, Vec3 pos) {
-		throw new AssertionError();
-	}
-
 	public TeleportResult teleport(ServerPlayer player, Function<ServerPlayer, TeleportPos> positionGetter) {
-		TeleportResult cooldownResult = checkCooldown(player);
-		if (!cooldownResult.isSuccess()) {
-			return cooldownResult;
-		}
-
-		TeleportPos pos = positionGetter.apply(player);
-
-		TeleportResult blacklistedResult = pos.checkDimensionBlacklist(player);
-		if (!blacklistedResult.isSuccess()) {
-			return blacklistedResult;
-		}
-		
 		CompoundEventResult<Component> result = TeleportEvent.TELEPORT.invoker().teleport(player);
 		if (result.isFalse()) {
 			return TeleportResult.failed(result.object());
 		}
-		
-		if (!firePlatformTeleportEvent(player, Vec3.atBottomCenterOf(pos.getPos()))) {
-			return TeleportResult.failed(Component.translatable("ftbessentials.teleport_prevented"));
+
+		TeleportResult cooldownResult = checkCooldown();
+		if (!cooldownResult.isSuccess()) {
+			return cooldownResult;
 		}
 
 		int warmupTime = warmupConfig.applyAsInt(player);
@@ -90,7 +75,7 @@ public class WarmupCooldownTeleporter {
 	}
 
 	private TeleportResult teleportNow(ServerPlayer player, Function<ServerPlayer, TeleportPos> positionGetter) {
-		lastRun = System.currentTimeMillis();
+		cooldown = System.currentTimeMillis() + Math.max(0L, cooldownConfig.applyAsInt(player) * 1000L);
 
 		TeleportPos teleportPos = positionGetter.apply(player);
 		TeleportPos currentPos = new TeleportPos(player);

@@ -6,7 +6,6 @@ import dev.ftb.mods.ftbessentials.util.InventoryUtil;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,13 +25,13 @@ public enum KitManager {
         return INSTANCE;
     }
 
-    public void load(CompoundTag kits, HolderLookup.Provider provider) {
+    public void load(CompoundTag kits) {
         allKits.clear();
-        kits.getAllKeys().forEach(key -> allKits.put(key, Kit.fromNBT(key, kits.getCompound(key), provider)));
+        kits.getAllKeys().forEach(key -> allKits.put(key, Kit.fromNBT(key, kits.getCompound(key))));
     }
 
-    public CompoundTag save(HolderLookup.Provider provider) {
-        return Util.make(new CompoundTag(), tag -> allKits.forEach((name, kit) -> tag.put(name, kit.toNBT(provider))));
+    public CompoundTag save() {
+        return Util.make(new CompoundTag(), tag -> allKits.forEach((name, kit) -> tag.put(name, kit.toNBT())));
     }
 
     public Optional<Kit> get(String kitName) {
@@ -80,7 +79,6 @@ public enum KitManager {
     private void createKit(String kitName, long cooldownSecs, Supplier<NonNullList<ItemStack>> itemSupplier) {
         List<ItemStack> items = itemSupplier.get().stream()
                 .filter(stack -> !stack.isEmpty())
-                .map(ItemStack::copy)
                 .toList();
         if (items.isEmpty()) {
             throw new IllegalArgumentException("No items found!");
