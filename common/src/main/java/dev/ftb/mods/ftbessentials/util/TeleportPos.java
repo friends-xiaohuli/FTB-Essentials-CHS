@@ -127,9 +127,9 @@ public class TeleportPos {
 			};
 		}
 
-		TeleportResult DIMENSION_NOT_FOUND = failed(Component.literal("Dimension not found!"));
+		TeleportResult DIMENSION_NOT_FOUND = failed(Component.literal("§a[FUNI] 未找到该维度!"));
 
-		TeleportResult UNKNOWN_DESTINATION = failed(Component.literal("Unknown destination!"));
+		TeleportResult UNKNOWN_DESTINATION = failed(Component.literal("§a[FUNI] 未知的目的地！"));
 
 		int runCommand(ServerPlayer player);
 
@@ -144,9 +144,14 @@ public class TeleportPos {
 
 		@Override
 		default int runCommand(ServerPlayer player) {
-			String secStr = TimeUtils.prettyTimeString(getCooldown() / 1000L);
-			player.displayClientMessage(Component.literal("Can't teleport yet! Cooldown: " + secStr), false);
+			// 将冷却时间（毫秒）转为秒，并保留1位小数
+			double cooldownInSeconds = getCooldown() / 1000.0;
+			String formattedTime = String.format("%.1f", cooldownInSeconds); // 保留1位小数
+
+			// 显示冷却倒计时
+			player.displayClientMessage(Component.literal("§a[FUNI] 你还不能传送! 冷却倒计时: " + formattedTime + "秒"), false);
 			return 0;
 		}
 	}
+
 }

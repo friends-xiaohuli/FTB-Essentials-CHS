@@ -11,7 +11,7 @@ public class PermissionBasedIntValue {
 	public PermissionBasedIntValue(IntValue value, String permission, String... comment) {
 		this.value = value
 				.comment(comment)
-				.comment("You can override this with FTB Ranks using " + permission);
+				.comment("您可以使用FTB排名覆盖此设置 " + permission);
 		this.permission = permission;
 	}
 

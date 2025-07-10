@@ -13,13 +13,13 @@ public class TimedCommandConfig extends ToggleableConfig {
 		cooldown = new PermissionBasedIntValue(
 				config.addInt("cooldown", defaultCooldown).range(0, 604800),
 				String.format("ftbessentials.%s.cooldown", name),
-				String.format("Cooldown between /%s commands (in seconds)", name)
+				String.format("使用 /%s 指令的冷却时间（单位：秒）", name)
 		);
 
 		warmup = new PermissionBasedIntValue(
 				config.addInt("warmup", defaultWarmup).range(0, 604800),
 				String.format("ftbessentials.%s.warmup", name),
-				String.format("Warm-up time before /%s command executes (in seconds)", name)
+				String.format("执行 /%s 指令前的预热时间（单位：秒）", name)
 		);
 	}
 

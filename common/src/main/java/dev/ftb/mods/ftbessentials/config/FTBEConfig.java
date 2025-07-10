@@ -12,106 +12,106 @@ import java.util.List;
  * @author LatvianModder
  */
 public interface FTBEConfig {
-	SNBTConfig CONFIG = SNBTConfig.create(FTBEssentials.MOD_ID).comment("FTB Essentials config file", "If you're a modpack maker, edit defaultconfigs/ftbessentials-server.snbt instead");
+	SNBTConfig CONFIG = SNBTConfig.create(FTBEssentials.MOD_ID).comment("FTB Essentials配置文件 ZH", "如果您想要编辑此模组的配置文件，请编辑defaultconfigs/ftbessentials-server.snbt \n 模组汉化修改补充文件来自 WhiteFox_rua（https://www.mcmod.cn/author/28434.html[B站主页]https://space.bilibili.com/515094027） ");
 
 	SNBTConfig TELEPORTATION = CONFIG.addGroup("teleportation").comment("Teleportation-related settings");
 	// back
 	TimedCommandConfig BACK = new TimedCommandConfig(TELEPORTATION, "back", 30, 0)
-			.comment("Allows users to return to their previous location after teleporting (or dying)");
+			.comment("允许用户在传送（或死亡）后返回到之前的位置");
 	PermissionBasedIntValue MAX_BACK = new PermissionBasedIntValue(
 			BACK.config.addInt("max", 10)
 					.range(0, Integer.MAX_VALUE),
 			"ftbessentials.back.max",
-			"Max size of the teleport history. This limits how many times you can use /back"
+			"传送历史的最大大小。这限制了您可以使用/返回的次数"
 	);
 	BooleanValue BACK_ON_DEATH_ONLY = BACK.config.addBoolean("only_on_death", false)
-			.comment("Should be the /back command only be used for returning to the last death point?");
+			.comment("是否仅在死亡后使用 /back 命令返回到上次死亡点？");
 	// spawn
 	TimedCommandConfig SPAWN = new TimedCommandConfig(TELEPORTATION, "spawn", 10, 0);
 	// warp
 	TimedCommandConfig WARP = new TimedCommandConfig(TELEPORTATION, "warp", 10, 0)
-			.comment("Allows admins to create 'warps', which are fixed points in the world that users may teleport to using /warp");
+			.comment("允许管理员创建 '传送门'，这些是固定的世界点，用户可以使用 /warp 命令传送到这些点");
 	// home
 	TimedCommandConfig HOME = new TimedCommandConfig(TELEPORTATION, "home", 10, 0)
-			.comment("Allows users to set 'homes', which they can then freely teleport to by using /home afterwards");
+			.comment("允许用户设置 'HOME'，用户可以随时使用 /home 命令传送到这个地点");
 	PermissionBasedIntValue MAX_HOMES = new PermissionBasedIntValue(
 			HOME.config.addInt("max", 1)
 					.range(0, Integer.MAX_VALUE),
 			"ftbessentials.home.max",
-			"Max amount of homes a user can have."
+			"用户可以拥有的最大 HOME 数量."
 	);
 	// tpa
 	TimedCommandConfig TPA = new TimedCommandConfig(TELEPORTATION, "tpa", 10, 0)
-			.comment("Allows players to create requests to teleport to other users on the server,",
-					"as well as requesting other players to teleport to them");
+			.comment("允许玩家发送请求以传送到服务器中的其他玩家,",
+					"也可以请求其他玩家传送到自己这里");
 	// rtp
 	TimedCommandConfig RTP = new TimedCommandConfig(TELEPORTATION, "rtp", 600, 0)
-			.comment("Allows players to teleport to a random point in the Wilderness",
-					"Note: This currently does not respect Claimed Chunks yet!");
-	IntValue RTP_MAX_TRIES = RTP.config.addInt("max_tries", 100).range(1, 1000).comment("Number of tries before /rtp gives up");
-	IntValue RTP_MIN_DISTANCE = RTP.config.addInt("min_distance", 500).range(0, 30000000).comment("/rtp min distance from spawn point");
-	IntValue RTP_MAX_DISTANCE = RTP.config.addInt("max_distance", 25000).range(0, 30000000).comment("/rtp max distance from spawn point");
+			.comment("允许玩家随机传送到荒野中的某个点",
+					"注意：目前尚未考虑已被声明的区块！");
+	IntValue RTP_MAX_TRIES = RTP.config.addInt("max_tries", 100).range(1, 1000).comment("执行 /rtp 命令前尝试寻找可传送位置的最大次数");
+	IntValue RTP_MIN_DISTANCE = RTP.config.addInt("min_distance", 500).range(0, 30000000).comment("/rtp 距离出生点的最小距离");
+	IntValue RTP_MAX_DISTANCE = RTP.config.addInt("max_distance", 25000).range(0, 30000000).comment("/rtp 距离出生点的最大距离");
 	StringListValue RTP_DIMENSION_WHITELIST = RTP.config.addStringList("dimension_whitelist", List.of())
-			.comment("Whitelisted dimension ID's for /rtp (if non-empty, player *must* be in one of these dimensions)",
-					"Wildcarded dimensions (e.g. 'somemod:*') are supported");
+			.comment("允许执行 /rtp 的维度 ID 白名单（如果不为空，玩家 *必须* 处于这些维度之一）",
+					"支持通配符维度名（例如 'somemod:*'）");
 	StringListValue RTP_DIMENSION_BLACKLIST = RTP.config.addStringList("dimension_blacklist", List.of("minecraft:the_end"))
-			.comment("Blacklisted dimension ID's for /rtp (player *must not* be in any of these dimensions)",
-					"Wildcarded dimensions (e.g. 'somemod:*') are supported");
+			.comment("禁止执行 /rtp 的维度 ID 黑名单（玩家 *不能* 处于这些维度之一）",
+					"支持通配符维度名（例如 'somemod:*'）");
 	// tpl
 	ToggleableConfig TPL = new ToggleableConfig(TELEPORTATION, "tpl")
-			.comment("Allows admins to teleport to the location a user was last seen at");
+			.comment("允许管理员传送到用户最后一次出现的位置");
 
 	ToggleableConfig TPX = new ToggleableConfig(TELEPORTATION, "tpx")
-			.comment("Allows admins to teleport to dimension");
+			.comment("允许管理员跨维度传送");
 	ToggleableConfig JUMP = new ToggleableConfig(TELEPORTATION, "jump")
-			.comment("Allows admins to jump (teleport) to the focused block");
+			.comment("允许管理员传送（跳跃）到当前指向的方块位置");
 
-	SNBTConfig ADMIN = CONFIG.addGroup("admin").comment("Admin commands for cheating and moderation");
+	SNBTConfig ADMIN = CONFIG.addGroup("admin").comment("管理员用于作弊和管理的指令配置");
 	ToggleableConfig HEAL = new ToggleableConfig(ADMIN, "heal")
-			.comment("Allows admins to fully heal (health, food, fire, potion effects) themselves or a player using a command");
+			.comment("允许管理员使用指令为自己或他人完全恢复（生命值、饥饿值、火焰、药水效果）");
 	ToggleableConfig FEED = new ToggleableConfig(ADMIN, "feed")
-			.comment("Allows admins to fully feed themselves or a player using a command");
+			.comment("允许管理员使用指令为自己或他人恢复饥饿值");
 	ToggleableConfig EXTINGUISH = new ToggleableConfig(ADMIN, "extinguish")
-			.comment("Allows admins to extinguish themselves or a player using a command");
+			.comment("允许管理员使用指令熄灭自己或他人身上的火焰");
 	ToggleableConfig FLY = new ToggleableConfig(ADMIN, "fly")
-			.comment("Allows admins to toggle flying status using a command, without having to use Creative Mode");
+			.comment("允许管理员使用指令切换飞行状态，无需使用创造模式");
 	ToggleableConfig SPEED = new ToggleableConfig(ADMIN, "speed")
-			.comment("Allows admins to change walk speed for themselves or a player");
+			.comment("允许管理员修改自己或他人的行走速度");
 	ToggleableConfig GOD = new ToggleableConfig(ADMIN, "god")
-			.comment("Allows admins to toggle invincibility using a command, without having to use Creative Mode");
+			.comment("允许管理员使用指令开启无敌模式，无需使用创造模式");
 	ToggleableConfig INVSEE = new ToggleableConfig(ADMIN, "invsee")
-			.comment("Allows admins to view other users' inventories using a command");
+			.comment("允许管理员查看其他玩家的背包");
 	ToggleableConfig MUTE = new ToggleableConfig(ADMIN, "mute")
-			.comment("Allows admins to restrict players from chatting by using a command to mute (or unmute) them");
+			.comment("允许管理员使用指令禁言或取消禁言玩家");
 	ToggleableConfig KIT = new ToggleableConfig(ADMIN, "kit")
-			.comment("Allows admins to configure kits of items that can be given to players.");
+			.comment("允许管理员配置物品礼包，并给予玩家");
 	ToggleableConfig TP_OFFLINE = new ToggleableConfig(ADMIN, "tp_offline")
-			.comment("Allows admins to change the location of offline players.");
+			.comment("允许管理员修改离线玩家的位置");
 
-	SNBTConfig MISC = CONFIG.addGroup("misc").comment("Miscellaneous features and utilities");
+	SNBTConfig MISC = CONFIG.addGroup("misc").comment("杂项功能和实用工具配置");
 	ToggleableConfig KICKME = new ToggleableConfig(MISC, "kickme")
-			.comment("Allows users to kick themselves from the server, for example if they are stuck or desynced");
+			.comment("允许用户踢出自己，例如卡住或数据不同步时使用");
 	ToggleableConfig TRASHCAN = new ToggleableConfig(MISC, "trashcan")
-			.comment("Enables usage of a trash can inventory, which can be used to void unneeded items");
+			.comment("启用垃圾桶功能，可以销毁不需要的物品");
 	ToggleableConfig REC = new ToggleableConfig(MISC, "rec")
-			.comment("Allows users to announce their recording or streaming status to the server by using commands");
+			.comment("允许用户使用指令向服务器宣布自己正在录制或直播");
 	ToggleableConfig HAT = new ToggleableConfig(MISC, "hat")
-			.comment("Allows users to set a custom hat as their head item by using a command");
+			.comment("允许用户将物品作为帽子佩戴在头部");
 	ToggleableConfig NICK = new ToggleableConfig(MISC, "nick")
-			.comment("Allows users to change their display name, as well as admins to change nicknames for other users");
+			.comment("允许用户更改自己的显示昵称，管理员也可为他人更改昵称");
 	ToggleableConfig ENDER_CHEST = new ToggleableConfig(MISC, "enderchest")
-			.comment("Allows users to access their ender chest, as well as admins to manage other players' ender chests.");
+			.comment("允许用户访问自己的末影箱，管理员也可管理其他玩家的末影箱");
 	ToggleableConfig CRAFTING_TABLE = new ToggleableConfig(MISC, "crafting")
-			.comment("Allows users to access a Crafting Table GUI without needing a Crafting Table.");
+			.comment("允许用户无需工作台即可打开合成界面");
 	ToggleableConfig STONECUTTER = new ToggleableConfig(MISC, "stonecutter")
-			.comment("Allows users to access a Stonecutter GUI without needing a Stonecutter.");
+			.comment("允许用户无需切石机即可打开切石界面");
 	ToggleableConfig ANVIL = new ToggleableConfig(MISC, "anvil")
-			.comment("Allows users to access an Anvil GUI without needing an Anvil.");
+			.comment("允许用户无需铁砧即可打开铁砧界面");
 	ToggleableConfig SMITHING_TABLE = new ToggleableConfig(MISC, "smithing")
-			.comment("Allows users to access a Smithing Table GUI without needing a Smithing Table.");
+			.comment("允许用户无需锻造台即可打开锻造界面");
 	ToggleableConfig LEADERBOARD = new ToggleableConfig(MISC, "leaderboard")
-			.comment("Allows users to view leaderboard stats about everyone on the server.");
+			.comment("允许用户查看服务器排行榜统计信息");
 	ToggleableConfig NEAR = new ToggleableConfig(MISC, "near")
-			.comment("Allows users to list nearby players, sorted by distance");
+			.comment("允许用户列出附近的玩家，按距离排序");
 }
 
