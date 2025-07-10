@@ -119,7 +119,7 @@ public class TeleportCommands {
 	public static int back(ServerPlayer player) {
 		return FTBEPlayerData.getOrCreate(player).map(data -> {
 			if (data.teleportHistory.isEmpty()) {
-				player.displayClientMessage(Component.literal("Teleportation history is empty!").withStyle(ChatFormatting.RED), false);
+				player.displayClientMessage(Component.literal("§e[BACK] 传送历史为空!").withStyle(ChatFormatting.RED), false);
 				return 0;
 			}
 

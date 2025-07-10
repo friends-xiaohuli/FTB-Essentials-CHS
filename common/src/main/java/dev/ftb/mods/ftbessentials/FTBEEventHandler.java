@@ -152,11 +152,11 @@ public class FTBEEventHandler {
 				ServerPlayer target = server.getPlayerList().getPlayer(r.target().getUuid());
 
 				if (source != null) {
-					source.sendSystemMessage(Component.literal("TPA request expired!"));
+					source.sendSystemMessage(Component.literal("§c[TPA] 请求超时!"));
 				}
 
 				if (target != null) {
-					target.sendSystemMessage(Component.literal("TPA request expired!"));
+					target.sendSystemMessage(Component.literal("§c[TPA] 请求超时!"));
 				}
 
 				iterator.remove();

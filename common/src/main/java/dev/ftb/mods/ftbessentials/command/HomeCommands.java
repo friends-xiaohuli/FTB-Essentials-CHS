@@ -9,6 +9,7 @@ import dev.ftb.mods.ftbessentials.config.FTBEConfig;
 import dev.ftb.mods.ftbessentials.util.FTBEPlayerData;
 import dev.ftb.mods.ftbessentials.util.SavedTeleportManager;
 import dev.ftb.mods.ftbessentials.util.TeleportPos;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -66,44 +67,56 @@ public class HomeCommands {
 	}
 
 	public static int home(ServerPlayer player, String name) {
-		return FTBEPlayerData.getOrCreate(player)
-				.map(data -> data.homeManager().teleportTo(name, player, data.homeTeleporter).runCommand(player))
-				.orElse(0);
+		return FTBEPlayerData.getOrCreate(player).map(data -> {
+				Set<String> homeNames = data.homeManager().getNames();
+				if (!homeNames.contains(name)) {
+					player.displayClientMessage(Component.literal("§c[HOME] 不存在: §e" + name), false);
+					return 0;
+				}
+
+				return data.homeManager().teleportTo(name, player, data.homeTeleporter).runCommand(player);
+				}).orElse(0);
 	}
 
 	public static int setHome(ServerPlayer player, String name) {
 		return FTBEPlayerData.getOrCreate(player).map(data -> {
 			try {
 				data.homeManager().addDestination(name, new TeleportPos(player), player);
-				player.displayClientMessage(Component.literal("Home set!"), false);
+				player.displayClientMessage(Component.literal("§a[HOME] 设置成功! " + name), false);
 				return 1;
 			} catch (SavedTeleportManager.TooManyDestinationsException e) {
-				player.displayClientMessage(Component.literal("Can't add any more homes!"), false);
+				player.displayClientMessage(Component.literal("§e[HOME] 已到达上限! 无法继续添加！"), false);
 				return 0;
 			}
 		}).orElse(0);
 	}
 
 	public static int delHome(ServerPlayer player, String name) {
+		String homeName = name.toLowerCase();
 		return FTBEPlayerData.getOrCreate(player).map(data -> {
-			if (data.homeManager().deleteDestination(name.toLowerCase())) {
-				player.displayClientMessage(Component.literal("Home deleted!"), false);
+			if (data.homeManager().deleteDestination(homeName)) {
+				player.displayClientMessage(Component.literal("§a[HOME] 已删除 Home 点: §e" + homeName), false);
 				return 1;
 			} else {
-				player.displayClientMessage(Component.literal("Home not found!"), false);
+				player.displayClientMessage(Component.literal("§c[HOME] 未找到名为 §e" + homeName + " §c的 Home 点!"), false);
 				return 0;
 			}
 		}).orElse(0);
 	}
 
+
 	public static int listHomes(CommandSourceStack source, GameProfile of) {
 		return FTBEPlayerData.getOrCreate(of).map(data -> {
 			if (data.homeManager().getNames().isEmpty()) {
-				source.sendSuccess(() -> Component.literal("None"), false);
+				source.sendSuccess(() -> Component.literal("§c[HOME] None 未找到任何点位! "), false);
 			} else {
 				TeleportPos origin = new TeleportPos(source.getLevel().dimension(), BlockPos.containing(source.getPosition()));
 				data.homeManager().destinations().forEach(entry ->
-						source.sendSuccess(() -> Component.literal(entry.name() + ": " + entry.destination().distanceString(origin)), false));
+						source.sendSuccess(() -> Component.empty()
+										.append(Component.literal(entry.name()).withStyle(ChatFormatting.YELLOW))
+										.append(Component.literal(" |距离 ").withStyle(ChatFormatting.GRAY))
+										.append(Component.literal(entry.destination().distanceString(origin)).withStyle(ChatFormatting.GREEN)),
+								false));
 			}
 			return 1;
 		}).orElse(0);

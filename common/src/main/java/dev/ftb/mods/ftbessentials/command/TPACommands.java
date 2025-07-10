@@ -8,9 +8,12 @@ import dev.ftb.mods.ftbessentials.util.TeleportPos;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.*;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -41,15 +44,51 @@ public class TPACommands {
 		if (FTBEConfig.TPA.isEnabled()) {
 			dispatcher.register(Commands.literal("tpa")
 					.requires(FTBEConfig.TPA)
-					.then(Commands.argument("target", EntityArgument.player())
-							.executes(context -> tpa(context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "target"), false))
+					.then(Commands.argument("target", StringArgumentType.word()) // 使用字符串而非 EntityArgument 直接处理
+							.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+									ctx.getSource().getServer().getPlayerNames(), builder))
+							.executes(context -> {
+								ServerPlayer source = context.getSource().getPlayerOrException();
+								String targetName = StringArgumentType.getString(context, "target");
+
+								ServerPlayer target = context.getSource().getServer().getPlayerList().getPlayerByName(targetName);
+								if (target == null) {
+									source.displayClientMessage(Component.literal("§c[TPA] 玩家不存在或未在线!"), false);
+									return 0;
+								}
+
+								if (source.getUUID().equals(target.getUUID())) {
+									source.displayClientMessage(Component.literal("§c[TPA] 你不能请求传送到自己!"), false);
+									return 0;
+								}
+
+								return tpa(source, target, false);
+							})
 					)
 			);
 
-			dispatcher.register(Commands.literal("tpahere")
+			dispatcher.register(Commands.literal("tphere")
 					.requires(FTBEConfig.TPA)
-					.then(Commands.argument("target", EntityArgument.player())
-							.executes(context -> tpa(context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "target"), true))
+					.then(Commands.argument("target", StringArgumentType.word()) // 使用字符串而非 EntityArgument 直接处理
+							.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+									ctx.getSource().getServer().getPlayerNames(), builder))
+							.executes(context -> {
+								ServerPlayer source = context.getSource().getPlayerOrException();
+								String targetName = StringArgumentType.getString(context, "target");
+
+								ServerPlayer target = context.getSource().getServer().getPlayerList().getPlayerByName(targetName);
+								if (target == null) {
+									source.displayClientMessage(Component.literal("§c[TPA] 玩家不存在或未在线!"), false);
+									return 0;
+								}
+
+								if (source.getUUID().equals(target.getUUID())) {
+									source.displayClientMessage(Component.literal("§c[TPA] 你不能请求传送到自己!"), false);
+									return 0;
+								}
+
+								return tpa(source, target, false);
+							})
 					)
 			);
 
@@ -78,9 +117,15 @@ public class TPACommands {
 		}
 
 		if (REQUESTS.values().stream().anyMatch(r -> r.source == dataSource && r.target == dataTarget)) {
-			player.displayClientMessage(Component.literal("Request already sent!"), false);
+			player.displayClientMessage(Component.literal("§c[TPA] 请求已发送, 别急!"), false);
 			return 0;
 		}
+
+		if (player.equals(target)) {
+			player.displayClientMessage(Component.literal("§c[TPA] 你不能传送到自己!"), false);
+			return 0;
+		}
+
 
 		TeleportPos.TeleportResult result = here ?
 				dataTarget.tpaTeleporter.checkCooldown() :
@@ -92,50 +137,67 @@ public class TPACommands {
 
 		TPARequest request = create(dataSource, dataTarget, here);
 
-		MutableComponent component = Component.literal("TPA request! [ ");
+		// ====== 组件1：主信息（换行 + 颜色）
+		MutableComponent component = Component.literal("§b[TPA] §f您收到了一个新的传送请求\n§7传送请求 [ ");
 		component.append((here ? target : player).getDisplayName().copy().withStyle(ChatFormatting.YELLOW));
-		component.append(" ➡ ");
+		component.append(Component.literal(" §f➡ ").withStyle(ChatFormatting.WHITE));
 		component.append((here ? player : target).getDisplayName().copy().withStyle(ChatFormatting.YELLOW));
-		component.append(" ]");
+		component.append(Component.literal("§7 ]"));
 
-		MutableComponent component2 = Component.literal("Click one of these: ");
-		component2.append(Component.literal("Accept ✔").setStyle(Style.EMPTY
+		// ====== 组件2：按钮部分（点击命令）
+		MutableComponent component2 = Component.literal("【");
+		component2.append(Component.literal("接受 ✔").setStyle(Style.EMPTY
 				.applyFormat(ChatFormatting.GREEN)
 				.withBold(true)
 				.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaccept " + request.id))
-				.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Click to Accept")))
-		));
+				.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("点击以接受")))));
 
-		component2.append(" | ");
+		component2.append(Component.literal(" §7| ").withStyle(ChatFormatting.GRAY));
 
-		component2.append(Component.literal("Deny ❌").setStyle(Style.EMPTY
+		component2.append(Component.literal("拒绝 ❌").setStyle(Style.EMPTY
 				.applyFormat(ChatFormatting.RED)
 				.withBold(true)
 				.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpdeny " + request.id))
-				.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Click to Deny")))
-		));
+				.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("点击以拒绝")))));
 
-		component2.append(" |");
+		component2.append(Component.literal("】"));
 
-		target.displayClientMessage(component, false);
+		// ====== 发给目标玩家
+		target.displayClientMessage(component, false);  // false = 显示在聊天栏
 		target.displayClientMessage(component2, false);
 
-		player.displayClientMessage(Component.literal("Request sent!"), false);
+		// ====== 热栏提示 + 声音（短提示）
+		target.displayClientMessage(Component.literal("§e你收到了一个传送请求!"), true);
+		target.level().playSound(
+				null,  // null 表示在客户端播放声音
+				target.getX(), target.getY(), target.getZ(),
+				SoundEvents.NOTE_BLOCK_PLING.value(),
+				SoundSource.PLAYERS,
+				1.0F,
+				1.2F
+		);
+
+
+
+		// ====== 发给请求发送者
+		player.displayClientMessage(Component.literal("§a[TPA] 请求已发送!"), false);
+
 		return 1;
 	}
+
 
 	public static int tpaccept(ServerPlayer player, String id) {
 		TPARequest request = REQUESTS.get(id);
 
 		if (request == null) {
-			player.displayClientMessage(Component.literal("Invalid request!"), false);
+			player.displayClientMessage(Component.literal("§e[TPA] 无效请求!"), false);
 			return 0;
 		}
 
 		ServerPlayer sourcePlayer = player.server.getPlayerList().getPlayer(request.source.getUuid());
 
 		if (sourcePlayer == null) {
-			player.displayClientMessage(Component.literal("Player has gone offline!"), false);
+			player.displayClientMessage(Component.literal("§e[TPA] 目标玩家已离线!"), false);
 			return 0;
 		}
 
@@ -154,18 +216,18 @@ public class TPACommands {
 		TPARequest request = REQUESTS.get(id);
 
 		if (request == null) {
-			player.displayClientMessage(Component.literal("Invalid request!"), false);
+			player.displayClientMessage(Component.literal("§e[TPA] 无效请求! "), false);
 			return 0;
 		}
 
 		REQUESTS.remove(request.id);
 
-		player.displayClientMessage(Component.literal("Request denied!"), false);
+		player.displayClientMessage(Component.literal("§e[TPA] 请求被拒绝!"), false);
 
 		ServerPlayer player2 = player.server.getPlayerList().getPlayer(request.target.getUuid());
 
 		if (player2 != null) {
-			player2.displayClientMessage(Component.literal("Request denied!"), false);
+			player2.displayClientMessage(Component.literal("§e[TPA] 请求被拒绝!"), false);
 		}
 
 		return 1;
