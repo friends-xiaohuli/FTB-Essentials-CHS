@@ -67,7 +67,7 @@ public class TPACommands {
 					)
 			);
 
-			dispatcher.register(Commands.literal("tphere")
+			dispatcher.register(Commands.literal("tpahere")
 					.requires(FTBEConfig.TPA)
 					.then(Commands.argument("target", StringArgumentType.word()) // 使用字符串而非 EntityArgument 直接处理
 							.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
@@ -87,7 +87,7 @@ public class TPACommands {
 									return 0;
 								}
 
-								return tpa(source, target, false);
+								return tpa(source, target, true);
 							})
 					)
 			);
